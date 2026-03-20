@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Call Intelligence Platform
 
-## Getting Started
+Next.js (App Router) app that uploads MP3/WAV recordings, transcribes with **OpenAI Whisper**, analyzes transcripts with **GPT** into structured JSON, persists results in a **local JSON file** (`data/calls.json`), and surfaces a **dashboard** plus **call detail** views with charts.
 
-First, run the development server:
+**No database required** — only an OpenAI API key.
+
+## Prerequisites
+
+- Node.js 20+
+- OpenAI API key with access to Whisper and chat models
+
+## Setup
+
+1. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+2. **Environment**
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   Set `OPENAI_API_KEY`. Optionally set `OPENAI_ANALYSIS_MODEL` (default: `gpt-4o-mini`).
+
+3. **Run**
+
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000).
+
+## Usage
+
+1. Go to **Upload call** and submit an MP3 or WAV (max 25MB), or use **Bulk upload** for up to 10 files in one batch (same pipeline per file).
+2. The API saves audio under `public/uploads/`, transcribes, analyzes, and appends the call to `data/calls.json`.
+3. **Dashboard** shows aggregates: totals, sentiment split, average score/duration, keyword frequency, action-item count, and recent calls.
+4. **All calls** (`/calls`) lists every processed recording; click a card to open insights for that call.
+5. On a call detail page: audio playback, transcript, tabs for insights/scores, and charts.
+
+**Live transcript** (call detail): open **Live transcript** on the recording card for a popup with audio and speaker-labeled lines; new uploads sync highlights to playback using Whisper timestamps + GPT speaker labeling. Older calls show plain transcript in the popup until re-uploaded.
+
+**Sales rep / customer names** are inferred from each transcript (main analysis plus a focused extraction pass when needed). Calls processed **before** that logic may show blank names until you run:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run backfill:names
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+(Requires Node 20+ with `--env-file` support and `OPENAI_API_KEY` in `.env.local`.)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production notes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Call data**: Stored in `data/calls.json` on the server filesystem. For serverless or multiple instances, replace with a real database or object storage.
+- **Audio files**: Stored under `public/uploads/`. For production, use S3 (or similar) and store URLs in your datastore.
+- **Timeouts**: The upload route sets `maxDuration` for long-running transcription/analysis on supported hosts.
+- **Secrets**: Keep API keys in environment variables only (see `.env.example`).
 
-## Learn More
+## Stack
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16, React 19, TypeScript (strict)
+- Tailwind CSS v4, shadcn/ui (Base UI)
+- OpenAI SDK (Whisper + chat completions)
+- Zod, Recharts, Sonner

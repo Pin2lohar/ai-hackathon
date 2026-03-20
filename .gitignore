@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# uploaded call audio (keep folder)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# local JSON datastore (created at runtime)
+/data/calls.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
